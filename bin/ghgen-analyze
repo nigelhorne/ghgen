@@ -23,7 +23,7 @@ my $total_workflows = 0;
 for my $file (sort $workflows_dir->children(qr/\.ya?ml$/i)) {
     $total_workflows++;
     say colored(['bold'], "📄 Analyzing: ") . $file->basename;
-    
+
     my $workflow;
     eval { $workflow = LoadFile($file) };
     if ($@) {
