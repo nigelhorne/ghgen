@@ -2,6 +2,7 @@ package App::GHGen::Generator;
 use v5.36;
 use warnings;
 use Path::Tiny;
+use App::GHGen::PerlCustomizer qw(detect_perl_requirements generate_custom_perl_workflow);
 
 use Exporter 'import';
 our @EXPORT_OK = qw(
@@ -80,88 +81,20 @@ sub get_workflow_description($type) {
 # Private workflow generators
 
 sub _generate_perl_workflow() {
-    return <<'YAML';
----
-name: Perl CI
-
-'on':
-  push:
-    branches:
-      - main
-      - master
-  pull_request:
-    branches:
-      - main
-      - master
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-jobs:
-  test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - macos-latest
-          - ubuntu-latest
-          - windows-latest
-        perl:
-          - '5.40'
-          - '5.38'
-          - '5.36'
-          - '5.34'
-          - '5.32'
-          - '5.30'
-          - '5.28'
-          - '5.22'
-    name: Perl ${{ matrix.perl }} on ${{ matrix.os }}
-    env:
-      AUTOMATED_TESTING: 1
-      NO_NETWORK_TESTING: 1
-      NONINTERACTIVE_TESTING: 1
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Perl
-        uses: shogo82148/actions-setup-perl@v1
-        with:
-          perl-version: ${{ matrix.perl }}
-
-      - name: Cache CPAN modules
-        uses: actions/cache@v4
-        with:
-          path: ~/perl5
-          key: ${{ runner.os }}-${{ matrix.perl }}-${{ hashFiles('cpanfile') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.perl }}-
-
-      - name: Install cpanm
-        run: cpanm --local-lib=~/perl5 local::lib
-
-      - name: Install dependencies
-        run: cpanm --local-lib=~/perl5 --notest --installdeps .
-
-      - name: Run tests
-        run: prove -lr t/
-
-      - name: Run Perl::Critic
-        if: matrix.perl == '5.40' && matrix.os == 'ubuntu-latest'
-        continue-on-error: true
-        run: |
-          cpanm --local-lib=~/perl5 --notest Perl::Critic
-          perlcritic --severity 3 lib/ || true
-
-      - name: Test coverage
-        if: matrix.perl == '5.40' && matrix.os == 'ubuntu-latest'
-        run: |
-          cpanm --local-lib=~/perl5 --notest Devel::Cover
-          cover -delete
-          HARNESS_PERL_SWITCHES=-MDevel::Cover prove -lr t/
-          cover
-YAML
+    # Try to detect requirements from project
+    my $reqs = detect_perl_requirements();
+    
+    # Use detected min version or default to 5.36
+    my $min_version = $reqs->{min_version} // '5.36';
+    
+    # Generate custom workflow with detected settings
+    return generate_custom_perl_workflow({
+        min_perl_version => $min_version,
+        max_perl_version => '5.40',
+        os => ['macos-latest', 'ubuntu-latest', 'windows-latest'],
+        enable_critic => 1,
+        enable_coverage => 1,
+    });
 }
 
 sub _generate_node_workflow() {

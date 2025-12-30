@@ -5,7 +5,7 @@ use ExtUtils::MakeMaker;
 
 WriteMakefile(
     NAME             => 'App::GHGen',
-    AUTHOR           => 'Your Name <your.email@example.com>',
+    AUTHOR           => 'Your Name <njh@nigelhorne.com>',
     VERSION_FROM     => 'lib/App/GHGen.pm',
     ABSTRACT_FROM    => 'lib/App/GHGen.pm',
     LICENSE          => 'perl_5',
