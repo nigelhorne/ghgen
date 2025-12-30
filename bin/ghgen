@@ -1,0 +1,302 @@
+#!/usr/bin/env perl
+use v5.36;
+use warnings;
+use Getopt::Long qw(:config no_ignore_case);
+use Pod::Usage;
+use Term::ANSIColor qw(colored);
+use Path::Tiny;
+use YAML::XS qw(LoadFile);
+
+use App::GHGen::Generator qw(generate_workflow list_workflow_types);
+use App::GHGen::Analyzer qw(analyze_workflow find_workflows);
+
+our $VERSION = '0.01';
+
+my %opts = (
+    help    => 0,
+    version => 0,
+    list    => 0,
+);
+
+GetOptions(
+    'help|h'      => \$opts{help},
+    'version|v'   => \$opts{version},
+    'type|t=s'    => \$opts{type},
+    'output|o=s'  => \$opts{output},
+    'list|l'      => \$opts{list},
+    'interactive|i' => \$opts{interactive},
+) or pod2usage(2);
+
+pod2usage(1) if $opts{help};
+
+if ($opts{version}) {
+    say "ghgen version $VERSION";
+    exit 0;
+}
+
+my $command = shift @ARGV // '';
+
+if ($command eq 'generate') {
+    cmd_generate();
+} elsif ($command eq 'analyze') {
+    cmd_analyze();
+} else {
+    pod2usage(-message => "Unknown command: $command", -exitval => 1);
+}
+
+sub cmd_generate() {
+    if ($opts{list}) {
+        list_types();
+        return;
+    }
+    
+    my $type = $opts{type};
+    
+    if ($opts{interactive} || !$type) {
+        $type = interactive_select_type();
+    }
+    
+    unless ($type) {
+        die colored(['red'], "Error: ") .
+            "Please specify --type or use --interactive\n";
+    }
+    
+    my $yaml = generate_workflow($type);
+    
+    unless ($yaml) {
+        die colored(['red'], "Error: ") .
+            "Unknown project type '$type'. Use --list to see options.\n";
+    }
+    
+    # Determine output file
+    my $output_file = $opts{output};
+    unless ($output_file) {
+        my $workflows_dir = path('.github/workflows');
+        $workflows_dir->mkpath unless $workflows_dir->exists;
+        $output_file = $workflows_dir->child("$type-ci.yml");
+    }
+    
+    # Write the workflow
+    path($output_file)->spew_utf8($yaml);
+    
+    say colored(['green'], "✓ ") . "Generated workflow: " . 
+        colored(['bold'], $output_file);
+    say "";
+    say colored(['cyan'], "Next steps:");
+    say "  1. Review the generated workflow";
+    say "  2. Customize it for your project";
+    say "  3. Commit and push to trigger the workflow";
+    say "";
+    say colored(['yellow'], "💡 Tip: ") . 
+        "Run 'ghgen analyze' to check for optimizations";
+}
+
+sub cmd_analyze() {
+    my @workflow_files = find_workflows();
+    
+    unless (@workflow_files) {
+        die colored(['red'], "Error: ") .
+            "No .github/workflows directory found\n" .
+            "Run this from the root of a repository with GitHub Actions.\n";
+    }
+    
+    say colored(['bold cyan'], "GitHub Actions Workflow Analyzer");
+    say colored(['cyan'], "=" x 50);
+    say "";
+    
+    my @all_issues;
+    my $total_workflows = 0;
+    
+    # Analyze each workflow file
+    for my $file (@workflow_files) {
+        $total_workflows++;
+        say colored(['bold'], "📄 Analyzing: ") . $file->basename;
+        
+        my $workflow;
+        eval { $workflow = LoadFile($file) };
+        if ($@) {
+            say colored(['red'], "  ✗ Failed to parse YAML: $@");
+            next;
+        }
+        
+        my @issues = analyze_workflow($workflow, $file->basename);
+        
+        if (@issues) {
+            for my $issue (@issues) {
+                say "  " . colored(['yellow'], "⚠ ") . $issue->{message};
+                if ($issue->{fix}) {
+                    say colored(['cyan'], "     💡 Fix:");
+                    for my $line (split /\n/, $issue->{fix}) {
+                        say "     " . $line;
+                    }
+                }
+                push @all_issues, { file => $file->basename, %$issue };
+            }
+        } else {
+            say "  " . colored(['green'], "✓ No issues found");
+        }
+        say "";
+    }
+    
+    # Summary
+    say colored(['bold cyan'], "=" x 50);
+    say colored(['bold'], "Summary:");
+    say "  Workflows analyzed: $total_workflows";
+    say "  Total issues found: " . scalar(@all_issues);
+    
+    if (@all_issues) {
+        say "";
+        say colored(['bold yellow'], "Recommendations:");
+        my %by_type;
+        push @{$by_type{$_->{type}}}, $_ for @all_issues;
+        
+        for my $type (sort keys %by_type) {
+            my $count = scalar @{$by_type{$type}};
+            say "  • " . colored(['yellow'], "$type") . 
+                ": $count workflow(s) affected";
+        }
+    }
+    
+    exit(@all_issues ? 1 : 0);
+}
+
+sub list_types() {
+    say colored(['bold cyan'], "Available workflow templates:");
+    say "";
+    
+    my %types = list_workflow_types();
+    
+    for my $type (sort keys %types) {
+        say "  " . colored(['green'], sprintf("%-10s", $type)) . 
+            " - $types{$type}";
+    }
+    
+    say "";
+    say "Usage: ghgen generate --type=<type> [--output=<file>]";
+    say "   or: ghgen generate --interactive";
+}
+
+sub interactive_select_type() {
+    say colored(['bold cyan'], "GitHub Actions Workflow Generator");
+    say colored(['cyan'], "=" x 50);
+    say "";
+    say "Select a project type:";
+    say "";
+    
+    my @types = qw(node python rust go ruby perl docker static);
+    my %descriptions = (
+        node   => 'Node.js/npm',
+        python => 'Python',
+        rust   => 'Rust',
+        go     => 'Go',
+        ruby   => 'Ruby',
+        perl   => 'Perl',
+        docker => 'Docker',
+        static => 'Static site (GitHub Pages)',
+    );
+    
+    for my $i (0..$#types) {
+        say "  " . colored(['green'], $i + 1) . ". $descriptions{$types[$i]}";
+    }
+    
+    say "";
+    print "Enter number (1-" . scalar(@types) . "): ";
+    chomp(my $choice = <STDIN>);
+    
+    if ($choice =~ /^\d+$/ && $choice >= 1 && $choice <= @types) {
+        return $types[$choice - 1];
+    }
+    
+    die colored(['red'], "Invalid choice\n");
+}
+
+__END__
+
+=head1 NAME
+
+ghgen - GitHub Actions workflow generator and analyzer
+
+=head1 SYNOPSIS
+
+  ghgen generate --type=perl [--output=FILE]
+  ghgen generate --interactive
+  ghgen generate --list
+  
+  ghgen analyze
+  
+  ghgen --help
+  ghgen --version
+
+=head1 DESCRIPTION
+
+B<ghgen> helps you create and optimize GitHub Actions workflows.
+
+=head1 COMMANDS
+
+=head2 generate
+
+Generate a new GitHub Actions workflow.
+
+  ghgen generate --type=perl
+  ghgen generate --type=node --output=custom.yml
+  ghgen generate --interactive
+  ghgen generate --list
+
+Options:
+
+  --type, -t TYPE       Project type (perl, node, python, rust, go, ruby, docker, static)
+  --output, -o FILE     Output file (default: .github/workflows/TYPE-ci.yml)
+  --interactive, -i     Interactive mode to select type
+  --list, -l            List available workflow types
+
+=head2 analyze
+
+Analyze existing workflows for issues and optimizations.
+
+  ghgen analyze
+
+Checks for:
+- Missing dependency caching
+- Unpinned action versions
+- Overly broad triggers
+- Missing concurrency controls
+- Outdated runner versions
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<--help, -h>
+
+Show this help message.
+
+=item B<--version, -v>
+
+Show version information.
+
+=back
+
+=head1 EXAMPLES
+
+Generate a Perl workflow:
+
+  ghgen generate --type=perl
+
+Interactively select and generate a workflow:
+
+  ghgen generate --interactive
+
+Analyze all workflows in current repository:
+
+  ghgen analyze
+
+=head1 AUTHOR
+
+Your Name <your.email@example.com>
+
+=head1 LICENSE
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
