@@ -9,6 +9,7 @@ lib/App/GHGen.pm
 lib/App/GHGen/Analyzer.pm
 lib/App/GHGen/Detector.pm
 lib/App/GHGen/Generator.pm
+lib/App/GHGen/Interactive.pm
 lib/App/GHGen/PerlCustomizer.pm
 LICENSE
 Makefile.PL
