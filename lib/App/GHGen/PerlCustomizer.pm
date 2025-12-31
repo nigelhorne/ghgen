@@ -17,7 +17,7 @@ App::GHGen::PerlCustomizer - Customize Perl workflows based on project requireme
 =head1 SYNOPSIS
 
     use App::GHGen::PerlCustomizer qw(detect_perl_requirements);
-    
+
     my $requirements = detect_perl_requirements();
     # Returns: { min_version => '5.036', has_cpanfile => 1, ... }
 
@@ -37,14 +37,14 @@ sub detect_perl_requirements() {
         has_dist_ini => 0,
         has_build_pl => 0,
     );
-    
+
     # Check for dependency files
     use Path::Tiny;
     $reqs{has_cpanfile} = path('cpanfile')->exists;
     $reqs{has_makefile_pl} = path('Makefile.PL')->exists;
     $reqs{has_dist_ini} = path('dist.ini')->exists;
     $reqs{has_build_pl} = path('Build.PL')->exists;
-    
+
     # Try to detect minimum Perl version
     if ($reqs{has_cpanfile}) {
         my $content = path('cpanfile')->slurp_utf8;
@@ -52,18 +52,18 @@ sub detect_perl_requirements() {
             $reqs{min_version} = $1;
         }
     }
-    
+
     if (!$reqs{min_version} && $reqs{has_makefile_pl}) {
         my $content = path('Makefile.PL')->slurp_utf8;
         if ($content =~ /MIN_PERL_VERSION\s*=>\s*['"]([0-9.]+)['"]/) {
             $reqs{min_version} = $1;
         }
     }
-    
+
     return \%reqs;
 }
 
-=head2 generate_custom_perl_workflow($options)
+=head2 generate_custom_perl_workflow($opts)
 
 Generate a customized Perl workflow based on options hash.
 
@@ -77,15 +77,15 @@ Options:
 =cut
 
 sub generate_custom_perl_workflow($opts = {}) {
-    my $min_version = $opts->{min_perl_version} // '5.36';
-    my $max_version = $opts->{max_perl_version} // '5.40';
-    my @os = @{$opts->{os} // ['ubuntu-latest', 'macos-latest', 'windows-latest']};
-    my $enable_critic = $opts->{enable_critic} // 1;
-    my $enable_coverage = $opts->{enable_coverage} // 1;
-    
-    # Generate Perl version list based on min/max
-    my @perl_versions = _get_perl_versions($min_version, $max_version);
-    
+	my $min_version = $opts->{min_perl_version} // '5.36';
+	my $max_version = $opts->{max_perl_version} // '5.40';
+	my @os = @{$opts->{os} // ['ubuntu-latest', 'macos-latest', 'windows-latest']};
+	my $enable_critic = $opts->{enable_critic} // 1;
+	my $enable_coverage = $opts->{enable_coverage} // 1;
+
+	# Generate Perl version list based on min/max
+	my @perl_versions = _get_perl_versions($min_version, $max_version);
+
     my $yaml = "---\n";
     $yaml .= "name: Perl CI\n\n";
     $yaml .= "'on':\n";
@@ -97,14 +97,14 @@ sub generate_custom_perl_workflow($opts = {}) {
     $yaml .= "    branches:\n";
     $yaml .= "      - main\n";
     $yaml .= "      - master\n\n";
-    
+
     $yaml .= "concurrency:\n";
     $yaml .= "  group: \${{ github.workflow }}-\${{ github.ref }}\n";
     $yaml .= "  cancel-in-progress: true\n\n";
-    
+
     $yaml .= "permissions:\n";
     $yaml .= "  contents: read\n\n";
-    
+
     $yaml .= "jobs:\n";
     $yaml .= "  test:\n";
     $yaml .= "    runs-on: \${{ matrix.os }}\n";
@@ -126,12 +126,12 @@ sub generate_custom_perl_workflow($opts = {}) {
     $yaml .= "      NONINTERACTIVE_TESTING: 1\n";
     $yaml .= "    steps:\n";
     $yaml .= "      - uses: actions/checkout\@v6\n\n";
-    
+
     $yaml .= "      - name: Setup Perl\n";
     $yaml .= "        uses: shogo82148/actions-setup-perl\@v1\n";
     $yaml .= "        with:\n";
     $yaml .= "          perl-version: \${{ matrix.perl }}\n\n";
-    
+
     $yaml .= "      - name: Cache CPAN modules\n";
     $yaml .= "        uses: actions/cache\@v5\n";
     $yaml .= "        with:\n";
@@ -139,22 +139,22 @@ sub generate_custom_perl_workflow($opts = {}) {
     $yaml .= "          key: \${{ runner.os }}-\${{ matrix.perl }}-\${{ hashFiles('cpanfile') }}\n";
     $yaml .= "          restore-keys: |\n";
     $yaml .= "            \${{ runner.os }}-\${{ matrix.perl }}-\n\n";
-    
+
     $yaml .= "      - name: Install cpanm and local::lib\n";
     $yaml .= "        if: runner.os != 'Windows'\n";
     $yaml .= "        run: cpanm --notest --local-lib=~/perl5 local::lib\n\n";
-    
+
     $yaml .= "      - name: Install cpanm and local::lib (Windows)\n";
     $yaml .= "        if: runner.os == 'Windows'\n";
     $yaml .= "        run: cpanm --notest App::cpanminus local::lib\n\n";
-    
+
     $yaml .= "      - name: Install dependencies\n";
     $yaml .= "        if: runner.os != 'Windows'\n";
     $yaml .= "        shell: bash\n";
     $yaml .= "        run: |\n";
     $yaml .= "          eval \$(perl -I ~/perl5/lib/perl5 -Mlocal::lib)\n";
     $yaml .= "          cpanm --notest --installdeps .\n\n";
-    
+
     $yaml .= "      - name: Install dependencies (Windows)\n";
     $yaml .= "        if: runner.os == 'Windows'\n";
     $yaml .= "        shell: cmd\n";
@@ -163,14 +163,14 @@ sub generate_custom_perl_workflow($opts = {}) {
     $yaml .= "          set \"PATH=%USERPROFILE%\\perl5\\bin;%PATH%\"\n";
     $yaml .= "          set \"PERL5LIB=%USERPROFILE%\\perl5\\lib\\perl5\"\n";
     $yaml .= "          cpanm --notest --installdeps .\n\n";
-    
+
     $yaml .= "      - name: Run tests\n";
     $yaml .= "        if: runner.os != 'Windows'\n";
     $yaml .= "        shell: bash\n";
     $yaml .= "        run: |\n";
     $yaml .= "          eval \$(perl -I ~/perl5/lib/perl5 -Mlocal::lib)\n";
     $yaml .= "          prove -lr t/\n\n";
-    
+
     $yaml .= "      - name: Run tests (Windows)\n";
     $yaml .= "        if: runner.os == 'Windows'\n";
     $yaml .= "        shell: cmd\n";
@@ -179,7 +179,7 @@ sub generate_custom_perl_workflow($opts = {}) {
     $yaml .= "          set \"PATH=%USERPROFILE%\\perl5\\bin;%PATH%\"\n";
     $yaml .= "          set \"PERL5LIB=%USERPROFILE%\\perl5\\lib\\perl5\"\n";
     $yaml .= "          prove -lr t/\n\n";
-    
+
     if ($enable_critic) {
         my $latest = $perl_versions[-1];
         $yaml .= "      - name: Run Perl::Critic\n";
@@ -191,7 +191,7 @@ sub generate_custom_perl_workflow($opts = {}) {
         $yaml .= "          perlcritic --severity 3 lib/ || true\n";
         $yaml .= "        shell: bash\n\n";
     }
-    
+
     if ($enable_coverage) {
         my $latest = $perl_versions[-1];
         $yaml .= "      - name: Test coverage\n";
@@ -204,18 +204,18 @@ sub generate_custom_perl_workflow($opts = {}) {
         $yaml .= "          cover\n";
         $yaml .= "        shell: bash\n";
     }
-    
+
     return $yaml;
 }
 
 sub _get_perl_versions($min, $max) {
-    # All available Perl versions in descending order
-    my @all_versions = qw(5.40 5.38 5.36 5.34 5.32 5.30 5.28 5.26 5.24 5.22);
-    
-    # Normalize version strings for comparison
-    my $min_normalized = _normalize_version($min);
-    my $max_normalized = _normalize_version($max);
-    
+	# All available Perl versions in descending order
+	my @all_versions = qw(5.40 5.38 5.36 5.34 5.32 5.30 5.28 5.26 5.24 5.22);
+
+	# Normalize version strings for comparison
+	my $min_normalized = _normalize_version($min);
+	my $max_normalized = _normalize_version($max);
+
     my @selected;
     for my $version (@all_versions) {
         my $v_normalized = _normalize_version($version);
@@ -236,12 +236,25 @@ sub _normalize_version($version) {
 
 =head1 AUTHOR
 
-Nigel Horne <njh@bandsman.co.uk>
+Nigel Horne <njh@nigelhorne.com>
 
-=head1 LICENSE
+=head1 LICENCE AND COPYRIGHT
 
-This is free software; you can redistribute it and/or modify it under
-the same terms as the Perl 5 programming language system itself.
+Copyright 2025 Nigel Horne.
+
+Usage is subject to licence terms.
+
+The licence terms of this software are as follows:
+
+=over 4
+
+=item * Personal single user, single computer use: GPL2
+
+=item * All other users (including Commercial, Charity, Educational, Government)
+  must apply in writing for a licence for use from Nigel Horne at the
+  above e-mail.
+
+=back
 
 =cut
 
