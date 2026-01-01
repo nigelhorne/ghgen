@@ -12,6 +12,8 @@ use App::GHGen::Analyzer qw(analyze_workflow find_workflows);
 use App::GHGen::Detector qw(detect_project_type get_project_indicators);
 use App::GHGen::Interactive qw(customize_workflow);
 use App::GHGen::PerlCustomizer qw(generate_custom_perl_workflow);
+use App::GHGen::Fixer qw(fix_workflow can_auto_fix);
+use App::GHGen::CostEstimator qw(estimate_current_usage estimate_savings);
 
 our $VERSION = '0.01';
 
@@ -30,6 +32,8 @@ GetOptions(
     'interactive|i' => \$opts{interactive},
     'auto|a'      => \$opts{auto},
     'customize|c' => \$opts{customize},
+    'fix|f'       => \$opts{fix},
+    'estimate|e'  => \$opts{estimate},
 ) or pod2usage(2);
 
 pod2usage(1) if $opts{help};
@@ -134,11 +138,46 @@ sub cmd_analyze() {
     }
     
     say colored(['bold cyan'], "GitHub Actions Workflow Analyzer");
+    if ($opts{fix}) {
+        say colored(['yellow'], "(Auto-fix mode enabled)");
+    }
+    if ($opts{estimate}) {
+        say colored(['cyan'], "(Cost estimation mode)");
+    }
     say colored(['cyan'], "=" x 50);
     say "";
     
+    # Get cost estimate first if requested
+    my $current_usage;
+    if ($opts{estimate}) {
+        say colored(['bold'], "📊 Estimating current CI usage...");
+        say "";
+        $current_usage = estimate_current_usage(\@workflow_files);
+        
+        say colored(['bold'], "Current Monthly Usage:");
+        say "  Total CI minutes: " . colored(['yellow'], $current_usage->{total_minutes});
+        say "  Billable minutes: " . colored(['yellow'], $current_usage->{billable_minutes}) .
+            " (after 2,000 free tier)";
+        say "  Estimated cost: " . colored(['yellow'], sprintf("\$%.2f", $current_usage->{monthly_cost}));
+        say "";
+        
+        if (@{$current_usage->{workflows}} > 1) {
+            say colored(['bold'], "Per-Workflow Breakdown:");
+            for my $wf (sort { $b->{minutes_per_month} <=> $a->{minutes_per_month} } 
+                        @{$current_usage->{workflows}}) {
+                say sprintf("  %-40s %4d min/month (%3d runs × %4.1f min/run)",
+                    $wf->{name},
+                    $wf->{minutes_per_month},
+                    $wf->{runs_per_month},
+                    $wf->{minutes_per_run});
+            }
+            say "";
+        }
+    }
+    
     my @all_issues;
     my $total_workflows = 0;
+    my $total_fixes = 0;
     
     # Analyze each workflow file
     for my $file (@workflow_files) {
@@ -155,16 +194,38 @@ sub cmd_analyze() {
         my @issues = analyze_workflow($workflow, $file->basename);
         
         if (@issues) {
-            for my $issue (@issues) {
-                say "  " . colored(['yellow'], "⚠ ") . $issue->{message};
-                if ($issue->{fix}) {
-                    say colored(['cyan'], "     💡 Fix:");
-                    for my $line (split /\n/, $issue->{fix}) {
-                        say "     " . $line;
+            # Filter to auto-fixable issues if in fix mode
+            my @fixable = $opts{fix} ? grep { can_auto_fix($_) } @issues : @issues;
+            
+            if ($opts{fix} && @fixable) {
+                say "  " . colored(['yellow'], "⚙ ") . 
+                    "Applying " . scalar(@fixable) . " fix(es)...";
+                
+                my $fixes = fix_workflow($file, \@fixable);
+                $total_fixes += $fixes;
+                
+                if ($fixes > 0) {
+                    say "  " . colored(['green'], "✓ ") . 
+                        "Applied $fixes fix(es)";
+                } else {
+                    say "  " . colored(['yellow'], "⚠ ") . 
+                        "Could not apply some fixes automatically";
+                }
+            } else {
+                # Just report issues
+                for my $issue (@issues) {
+                    my $icon = can_auto_fix($issue) ? "⚠" : "ℹ";
+                    say "  " . colored(['yellow'], "$icon ") . $issue->{message};
+                    if ($issue->{fix} && !$opts{fix} && !$opts{estimate}) {
+                        say colored(['cyan'], "     💡 Fix:");
+                        for my $line (split /\n/, $issue->{fix}) {
+                            say "     " . $line;
+                        }
                     }
                 }
-                push @all_issues, { file => $file->basename, %$issue };
             }
+            
+            push @all_issues, map { { file => $file->basename, %$_ } } @issues;
         } else {
             say "  " . colored(['green'], "✓ No issues found");
         }
@@ -177,7 +238,36 @@ sub cmd_analyze() {
     say "  Workflows analyzed: $total_workflows";
     say "  Total issues found: " . scalar(@all_issues);
     
-    if (@all_issues) {
+    if ($opts{fix}) {
+        say "  Fixes applied: " . colored(['green'], $total_fixes);
+    }
+    
+    # Cost savings estimate
+    if ($opts{estimate} && @all_issues) {
+        say "";
+        my $savings = estimate_savings(\@all_issues, \@workflow_files);
+        
+        if ($savings->{minutes} > 0) {
+            say colored(['bold'], "💰 Potential Savings:");
+            say "  With recommended changes: " . 
+                colored(['green'], ($current_usage->{total_minutes} - $savings->{minutes})) . 
+                " CI minutes/month";
+            say "  Reduction: " . colored(['green'], "-$savings->{minutes} minutes") .
+                " (" . colored(['green'], "$savings->{percentage}%") . ")";
+            say "  Cost savings: " . colored(['green'], "\$savings->{cost}/month") .
+                " (for private repos)";
+            
+            if (@{$savings->{details}}) {
+                say "";
+                say "  Breakdown:";
+                for my $detail (@{$savings->{details}}) {
+                    say "    • $detail->{description}: ~$detail->{minutes} min/month";
+                }
+            }
+        }
+    }
+    
+    if (@all_issues && !$opts{fix}) {
         say "";
         say colored(['bold yellow'], "Recommendations:");
         my %by_type;
@@ -185,8 +275,21 @@ sub cmd_analyze() {
         
         for my $type (sort keys %by_type) {
             my $count = scalar @{$by_type{$type}};
+            my $fixable = grep { can_auto_fix($_) } @{$by_type{$type}};
+            my $suffix = $fixable > 0 ? " ($fixable auto-fixable)" : "";
             say "  • " . colored(['yellow'], "$type") . 
-                ": $count workflow(s) affected";
+                ": $count workflow(s) affected$suffix";
+        }
+        
+        say "";
+        say colored(['cyan'], "💡 Tip: ") . 
+            "Run " . colored(['bold'], "ghgen analyze --fix") . 
+            " to automatically apply fixes";
+        
+        if (!$opts{estimate}) {
+            say colored(['cyan'], "💡 Tip: ") . 
+                "Run " . colored(['bold'], "ghgen analyze --estimate") . 
+                " to see potential cost savings";
         }
     }
     
@@ -330,6 +433,7 @@ ghgen - GitHub Actions workflow generator and analyzer
   ghgen generate --list
   
   ghgen analyze
+  ghgen analyze --fix
   
   ghgen --help
   ghgen --version
