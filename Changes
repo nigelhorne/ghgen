@@ -1,0 +1,560 @@
+Revision history for CGI-Info
+
+1.08	Thu Dec 18 08:12:56 EST 2025
+	Invalid args could get through if the logger is set
+	Make get_cookie() just call cookie()
+	Verify the format of the cookie name
+	Added test dashboard
+	Croak if tmpdir is given a non-scalar for default
+	No longer use Log::Any
+	Set HTTP status 501 when GET is given Multipart/form-data
+
+1.07	Sun Sep 14 09:16:12 EDT 2025
+	Fix https://ci.appveyor.com/project/nigelhorne/cgi-info-vqpj8/builds/52537979/job/bnag8kvc2htkl3vf
+
+0.106	Thu Aug  7 19:37:56 EDT 2025
+	Added bidswitchbot as a bot
+	Allow 'St Peter&#39;s' as an argument
+	Fix params() to return undef, not a scalar, when blocking an SQL injection
+	AUTOLOAD: added sanity check to the method name
+	Fix json testing when stdin_data is set
+	Only load IO::Interactive when needed
+	WAF: Strip unencoded NUL bytes as well as encoded NUL bytes
+
+0.105	Thu Jul 17 15:07:43 EDT 2025
+	carp for warning when logger not set
+	Flag Google-InspectionTool as a search_engine
+	Added "Fuzz Faster U Fool" as a bot
+	Also look in SSL_TLS_SNI for hostname
+	Allow domain_name() to be called as a class method
+
+0.104	Fri Jun 20 07:41:53 EDT 2025
+	Bumped minimum version of Config::Abstraction - and hence removed MD5_CTX workaround code
+	Flag Alibaba as a search engine
+	Use Object::Configure instead of Class::Debug
+	Allow IS_SEARCH_ENGINE and IS_MOBILE to be set in the environment
+
+0.103	Fri May 16 17:48:32 EDT 2025
+	Mark Clickagy as a bot
+	Don't use notice() since Log::Log4perl doesn't understand it
+	Added the cache() method
+	Workaround "(in cleanup) Failed to get MD5_CTX pointer" issue
+	Enhanced allow parameter with subroutine support
+
+0.102	Thu May  8 21:39:31 EDT 2025
+	Use Class::Debug
+
+0.101	Mon May  5 11:09:29 EDT 2025
+	Try hard to find the config files - should be in Config::Abstraction
+	Called 1.00 to work around version control which things 'dot' is the same as 'decimal point'
+
+0.100	Sat May  3 21:16:56 EDT 2025
+	Pave the way for the latest Config::Abstraction
+
+0.99	Wed Apr 23 07:55:03 EDT 2025
+	Don't try to read from the terminal when not interactive
+	Added t/config.t
+	Use Params::Get in new()
+	Block SQL injections using /**/ instead of spaces to separate keywords
+
+0.98	Tue Apr 15 13:39:22 EDT 2025
+	Allow AUTOLOAD in subclasses
+	Use Config::Abstraction instead of Config::Auto
+	Fix http://www.cpantesters.org/cpan/report/00f6f172-6d25-1014-9d67-b345cf55203a
+
+0.97	Fri Mar 28 07:56:10 EDT 2025
+	Not all loggers (e.g. Log::Any) can cope with a reference to an ARRAY
+	Added config_file argument to new()
+	Added logdir() sanity checks
+	Improved blocking for directory traversal attacks
+	Fix auto_load calling unknown routine isFalse
+
+0.96	Mon Mar 17 08:11:48 EDT 2025
+	Use Log::Abstraction
+	Added the auto_load parameter to disable AUTOLOAD
+
+0.95	Sun Mar  2 19:52:56 EST 2025
+	Use Params::Get
+
+0.94	Fri Feb 28 12:24:30 EST 2025
+	number types can also have min and max values
+	Now logs all messages in the array messages.  The warnings array has been removed.
+	Use Params::Validate::Strict rather than built in code
+
+0.93	Wed Feb 26 09:47:02 EST 2025
+	Use facility local0
+	Improved upload filename generation to prevent overwriting
+	allow() now supports full rule schemas
+	Croak rather than carp on expect, and remove all its code
+	Intercepted arguments that result in 422 now raise LOG_NOTICE rather than LOG_INFO
+
+0.92	Thu Feb 13 15:16:57 EST 2025
+	Return empty string with warnings_as_string() rather than undef when no warnings
+
+0.91	Mon Feb 10 14:32:57 EST 2025
+	Added t/waf.t to test the Web Application Firewall
+	params(): instead of cleaning up XSS, now sets them to 403 and doesn't pass the values back
+	Added warnings_as_string()
+	Added the raw option to as_string()
+
+0.90	Tue Feb  4 08:57:49 EST 2025
+	Ensure status is set before calling _warn so it's not lost (some 403s were being lost)
+	Try harder to call Google a search_engine
+	Allow the logger to be a filename
+
+0.89	Tue Jan 14 15:45:16 EST 2025
+	Fix http://www.cpantesters.org/cpan/report/048c5109-6c77-1014-8029-e79fc7de0390
+
+0.88	Mon Jan 13 09:33:24 EST 2025
+	Improved arg checking
+	Merge https://github.com/nigelhorne/CGI-Info/pull/21 (plicease)
+	Added _get_env()
+
+0.87	Wed Dec 18 11:06:09 EST 2024
+	Test warnings()
+	Allow the logger to be a ref to code
+	Fix is_mobile() default return code
+	Added t/30-basics.t
+	upload_dir must now be in, or a subdir of, tmpdir()
+
+0.86	Mon Nov 25 09:17:30 EST 2024
+	Ensure correct message is logged on SQL injection attempt
+	Remember warnings in the warnings array - added warnings() method
+
+0.85	Sun Nov 17 09:49:52 EST 2024
+	Send back HTTP code 422 when argument fails "allow"
+	Added come comments and small optimisations
+	new(): Use Scalar::Util to verify it's an object
+	Refactor AUTOLOAD
+	Avoid re-importing modules
+	Refactor status() and cookie() and add more tests
+	Added t/as_string.t
+
+0.84	Fri Oct 18 08:21:05 EDT 2024
+	Intercept SQL Injection
+		entry=-4346" OR 1749\=1749 AND "dgiO"\="dgiO;page=people
+	Use Test::DescribeMe to simplify tests
+	Don't fail on systems that Test::Script fails to install on (e.g. Haiku)
+
+0.83	Sun  8 Sep 08:52:23 EDT 2024
+	Mark Go-http-client as a robot
+	Support CircleCI
+	Fix t/script.t which failed on some platforms
+	Use gtar to create a distribution on Macs
+	Mark 'expect' as deprecated
+
+0.82	Thu Aug  8 07:51:02 EDT 2024
+	Mark ClaudeBot as a robot
+	Mark YaK/1.0 as a robot
+	Mark trendictionbot as a robot
+	Added helper routine _get_params() and use it
+
+0.81	Tue Apr  9 10:08:29 EDT 2024
+	Use Test::Needs
+	Added t/version.t
+	Added t/tabs.t
+	Mark axios/1.6.7, ias_crawler and ZoominfoBot as robots
+	Block "/**/ORDER/**/BY/**/" in the argument
+	Strip NUL byte poison
+
+0.80	Fri Jan 19 08:05:29 EST 2024
+	Added documentroot() as a synonym to rootdir()
+		For compatibility with Apache
+	Allow "use lib CGI::Info::script_dir() . '../lib';"
+	Mark Facebook as a search engine, not a robot
+
+0.79	Wed Jan  3 14:25:42 EST 2024
+	Better arg count checking
+	Mark techiaith.cymru as a robot
+	Facebook FBCLID can have "--" which can cause false positives
+	Mark ChatGPT as a search engine
+	Added root_dir() as synonym to rootdir()
+		That's the naming that CHI uses
+
+0.78	Fri Oct  6 13:59:51 EDT 2023
+	Set HTTP status to 403 on HTTP_USER_AGENT SQL injection attack
+	Test::Exception hasn't been used for sometime, so removed dependency
+
+0.77	Tue Aug 15 16:49:51 EDT 2023
+	Reduce the size of the cache
+	Added Dreamhost monitor as a robot
+
+0.76	Tue Aug  8 20:43:57 EDT 2023
+	Marked serpstatbot as a robot
+	Only load JSON::MaybeXS when needed
+
+0.75	Sat Apr 15 14:44:30 EDT 2023
+	Remove most calls to substr
+	Added Mediatoolkitbot as a robot
+	Added NetcraftSurveyAgent as a robot
+	Added Expanse as a robot
+	Added Bytespider as a robot
+	Added t/pod-synopsis.t
+	Refactored t/unused.t and t/10-compile.t
+	Fixed Github Actions on Alpine Linux, FreeBSD and OpenBSD
+	Label AmazonBot as a search engine
+	Block directory traversal attacks
+	Set HTTP status to 403 on blocked attacks
+	Catch another SQL injection attempt
+
+0.74	Wed Jan  4 22:16:12 EST 2023
+	Added python-requests/2.27.1 as a robot
+	Use latest Github Actions environment
+	Support Sec-CH-UA-Mobile
+	Calling new on an object now returns a clone rather than setting the defaults in the new object
+
+0.73	Fri Oct 29 07:32:37 EDT 2021
+	Attempt to fix https://www.cpantesters.org/cpan/report/6db47260-389e-11ec-bc66-57723b537541
+
+0.72	Thu Oct 28 09:08:43 EDT 2021
+	More sensible default statuses when params() has yet to be called
+	Ensure \u0026 is interpreted as &
+	Use JSON::MaybeXS instead of JSON
+
+0.71	Wed Feb  3 15:14:13 EST 2021
+	Added t/fixme.t
+	Use JSON module instead of JSON::Parse as the latter has dropped support for Solaris
+	Allow status to be set, this will be used later by CGI::Allow
+
+0.70	Fri  7 Jun 12:39:52 EDT 2019
+	Allow logdir() and tmpdir() to be called as a class methods
+	Fix http://www.cpantesters.org/cpan/report/78a1401c-42de-11e9-bf31-80c71e9d5857
+	Trap SQL injections with SELECT statements
+
+0.69	Sat  9 Mar 19:28:32 EST 2019
+	Added logdir()
+
+0.68	Fri Dec  7 08:14:21 EST 2018
+	Allow a parameter to have the value 0
+
+0.67	Tue Mar 27 12:31:12 EDT 2018
+	Remove the 'provides' tag
+
+0.66	Thu Dec 14 18:36:31 EST 2017
+	Added MyLogger to the MANIFEST
+
+0.65	Tue Dec 12 16:54:42 EST 2017
+	Fix breakage on 5.27.5 and beyond (Github issue 7)
+	Send 501 on unknown request, not 405
+	Bump minimum version of File::Spec
+	Use List::MoreUtils instead of grep
+
+0.64	Thu Oct 12 10:30:18 EDT 2017
+	Added mechanism to speak to setlogsock - useful for Dreamhost customers
+	Added set_logger
+
+0.63	Wed Jul  5 20:57:31 EDT 2017
+	When preventing SQL injection or XSS, don't return any parameters, since
+		it's best to assume everything is poisoned
+	Added max_upload_size to new()
+	OPTIONS shouldn't get through to CGI::Info, so disallow it
+
+0.62	Wed 21 Dec 09:28:36 EST 2016
+	Added status() method
+	Set maximum file upload size to 512K
+
+0.61	Thu  1 Dec 21:46:44 EST 2016
+	Missed bin/* from the MANIFEST
+
+0.60	Thu Dec  1 14:42:37 EST 2016
+	Handle JSON POST data
+	AUTOLOAD parameters
+	Added the cookie() method
+	Added Appveyor support to CI test on Windows
+	Added tests that the framework to allow CGI scripts to be tested from
+		the command line work
+	Added Travis and Coveralls integration
+	Mark some SEO scanners as robots
+	On unknown input, debug what it is
+	Added seznambot as a search engine
+
+0.59	Tue Apr 12 17:38:03 EDT 2016
+	Log the IP address of client attempting SQL injection
+	H::B says robot() returns undef if it's not a robot; but sometimes it returns 0
+	Bump minimum HTTP::Browserdetect to ensure bingbot is found
+
+0.58	Sat Dec 26 10:12:47 EST 2015
+	Support allowed list of arguments changing, this is useful for -
+		$my action = $info->param('action');
+		my %allowed;
+		if($action eq 'action1') {
+			%allowed = ('foo' => qr(\d+));
+		} else {
+			%allowed = ('bar' => qr(\d+));
+		}
+		my $params = $info->params(allowed => \%allowed);
+
+0.57	Sun Oct 25 15:43:05 EDT 2015
+	Reduce attack false positives
+	Don't add an argument if it's already there
+	--search-engine and --mobile didn't work
+	Less harsh SQL injection tests, there were too many false positives
+	Tabletsare no longer considered mobile phones
+	params now returns undef if no arguments were given
+	Pretend Facebookexternal (used to prefetch pages for
+		display) is a search_engine.
+	Don't mark search engines as robots
+
+0.56	Sun Aug 16 20:05:27 EDT 2015
+	Catch XML read failures
+	Twitterbot is a robot
+	Catch more injection attempts
+
+0.55	Thu Jun 11 17:33:10 EDT 2015
+	protocol() - Don't warn when not running as a CGI script
+	Added more explicit catching of XSS and SQL injection attempts
+
+0.54	Wed Jun  3 13:10:59 EDT 2015
+	Fix --tablet option
+	protocol() - Warn if the calling protocol can't be determined
+	Fix protocol() on OpenBSD, Solaris and NetBSD
+	Ensure that the temporary directory is writeable, otherwise tests will
+		fail
+
+0.53	Sat May 30 16:00:49 EDT 2015
+	Remove implicit assumption of the build directory
+
+0.52	Sat May 30 08:13:28 EDT 2015
+	Fix problem where mobile Chrome claimed it's a robot when data
+		compression is enabled
+	Ensure + is handled in parameters when encoded as %2B
+	cgi_host_url could sometimes give http:// instead of https://
+	Set minimum version as 5.6.1 since we use the 3 argument open()
+	When running outside CGI, allow one of --tablet, --search-engine,
+		--mobile and --robot to mimick those agents.
+	is_mobile: include code from detectmobilebrowsers.com
+
+0.51	Fri Jan  2 20:34:46 EST 2015
+	Fix breakage on older Perls
+
+0.50	Fri Jan  2 10:37:56 EST 2015
+	Put is_mobile in the cache
+	Added 'search' to the list of return values from browser_type()
+	Added t/used.t
+	Don't load cleaning modules when no arguments are given
+	Don't use String::EscapeCage - RT99598, String::Clean::XSS should
+		suffice
+
+0.49	Fri Nov  7 17:16:25 EST 2014
+	Ensure different agents from the same IP don't clash in the cache
+	Restore alloing new() arguments to be a reference
+
+0.48	Sun Oct 19 20:35:56 EDT 2014
+	Incorporated patch-1 from https://github.com/szabgab/CGI-Info
+	Consider Majestic12 to be a search engine
+	Only load File::Basename when needed
+	Use String::EscapeCage to taint and grab values
+	Added param message
+
+0.47	Sun Aug 24 14:56:10 EDT 2014
+	Support hostnames with dots at the end, e.g. when the URL used to
+		access a site is http://www.example.com., domain_name() will
+		return example.com, not example.com..
+	params() - return nothing when the call is OPTIONS
+	Added more hardening to file uploads
+	Added optional cache argument to new() to speed up look-ups
+	Test that tmpdir works at the class level
+
+0.46	Mon 11 Nov 08:46:26 EST 2013
+	Corrected some documentation issues on params()
+	Corrected handling of many cookies
+	Ensure script_path(), script_name() and tmpdir() are untainted.
+
+0.45	Fri 31 May 16:22:08 EDT 2013
+	_multipart_data(): Handle missing filename when uploading
+	Added _syslog and _logger to new()
+	Added warning if domain information can't be found
+	Don't load HTTP::BrowserDetect more than once (assume
+		HTTP_USER_AGENT doesn't change)
+	Use Test::Most instead of Test::More
+	Improve XSS prevention by using String::Clean::XSS
+	Added the allow option. It will replace the expected option
+
+0.44	Wed Apr 10 09:53:31 EDT 2013
+	Fix t/params.t when the root directory is writable (e.g.
+		running as root or on Windows)
+	params(): When running outside a CGI environment (i.e. in
+		development), avoid prompting for the arguments more
+		than once if just 'quit' is entered
+	_find_paths(): use File::Basename, it's more portable
+
+0.43	Sat Feb 16 12:18:50 EST 2013
+	Warn if reading POST arguments fail
+	Replaced t/unused.t with t/vars.t
+	Added extra check to t/script.t to check it returns an
+		existing file
+	Used 'PERL5OPT=-MDevel::Cover make test; cover' to add extra
+		tests
+	is_mobile(): return true for clients running on Androd
+
+0.42	Sat Oct 13 17:22:38 EDT 2012
+	Croak rather than carp if upload_dir isn't set
+	t/params.t no longer runs in tainted mode for File::Spec::Win32
+	Added t/changes.t, though that doesn't support date(1) output
+	Added browser_type()
+
+0.41	Thu Sep 13 13:38:43 BST 2012
+	get_cookie(): added validation, fix unitialized variable if the
+		requested cookie isn't in the jar
+
+0.40	Mon Sep 10 08:21:31 BST 2012
+	Fixed t/rootdir.t on Windows
+
+0.39	Wed Sep  5 10:17:55 BST 2012
+	Added get_cookie()
+
+0.38	Tue Sep  4 11:25:22 BST 2012
+	t/rootdir.t - don't check htdocs exists
+
+0.37	Mon Sep  3 16:18:59 BST 2012
+	Added rootdir
+
+0.36	Sun Sep  2 20:13:42 BST 2012
+	Change _find_paths to use rel2abs()
+
+0.35	Mon Aug 27 21:48:00 BST 2012
+	Added t/unused.t
+	Ensure that if the class is instantiated more than once, that POST
+		still works even though STDIN has already been read
+	documented and verified that protocol() can be used as a class method
+		as well as an object method
+
+0.34	Sun Aug 19 22:17:02 BST 2012
+	params(): when using POST, if CONTENT_LENGTH is defined, return undef
+	XML now sets XML not xml in params()
+	Test::Kwalitee isn't needed for build, only for optional testing
+	Added is_tablet()
+
+0.33	Tue Jul 31 09:38:43 BST 2012
+	Handle XML requests
+	Added t/dist.t
+
+0.32	Thu Jul 19 15:38:22 BST 2012
+	Removed some duplicate tests
+	Fixed t/script.t on Windows
+
+0.31	Wed Jul 18 15:57:04 BST 2012
+	Fixed script_name and script_path when not running as a CGI script
+	Added some tests
+
+0.30	Fri Jul 13 09:35:07 BST 2012
+	Fixed handling of POST content-type application/x-www-form-urlencoded
+	Fixed t/params.t on Windows
+	Removed unused variables
+
+0.29	Fri Jun 15 11:01:18 EDT 2012
+	Fixed t/carp.t on systems without Test::Carp
+
+0.28	Tue Jun 12 15:30:00 EDT 2012
+	Fixed boundary detection
+
+0.27	Mon Jun 11 23:28:16 EDT 2012
+	Debugged _multipart_data. Still some TODOs to be done
+
+0.26	Mon Jun 11 14:49:24 EDT 2012
+	Bump minimum version of HTTP::Browserdetect to 1.42
+	Rewrote _multipart_data
+
+0.25	Sun Jun 10 22:15:59 EDT 2012
+	Allow params to take a reference to a hash as an argument
+
+0.24	Sun Jun 10 10:29:26 EDT 2012
+	Added first draft of handling of multipart form data
+	Ignore invalid key=arg parameters in params()
+
+0.23	Tue May 15 14:58:01 EDT 2012
+	Added is_search_engine()
+
+0.22	Thu May  3 09:32:37 BST 2012
+	Fix tmpdir() in Cygwin, where giving a default value of '/non-existant' would
+		return '/non-existant/../tmp' rather than '/non-existant'.  I
+		guess it would also have broken under the Newcastle Connection.
+
+0.21	Wed May  2 13:21:40 BST 2012
+	Clean up a couple of regular expressions
+	Small speed improvement
+
+0.20	Thu Mar 15 13:58:25 EDT 2012
+	Fixed script_dir() on Windows
+
+0.19	Mon Mar 12 10:50:12 EDT 2012
+	Only do kwalitee test in author environment because it throws too
+		many false positives
+	Added script_dir()
+
+0.18	Fri Jan 27 09:28:44 GMT 2012
+	Fix t/tmpdir.t on Cygwin
+
+0.17
+	params: remove leading spaces and some attempts to put in hacking values
+	Added missing prerequisites to Makefile.PL
+
+0.16	Mon Oct  3 10:18:11 EDT 2011
+	Added expected argument to new and params
+
+0.15	Sun Sep  4 09:11:11 EDT 2011
+	Added plukkie to the list of robots
+	Added Test::NoWarnings tests
+	Stopped running some Windows tests. I need to think about paths
+		on Windows
+	is_mobile/is_robot now falls back to HTTP::BrowserDetect if it's present
+
+0.14	Thu Aug 25 11:51:49 EDT 2011
+	Added is_robot
+	Only attempt to read POSTed data when there is some to read
+	Better path handling on Windows
+	Added t/critit.t and t/snippets.t
+	Documented and tested compatibility with CGI::Untaint
+
+0.13	Thu Aug 11 13:30:38 EDT 2011
+	Added tmpdir function
+
+0.12
+	Remove \r from parameters
+
+0.11	Fri Jul 29 17:59:08 EDT 2011
+	as_string() now returns the empty string instead of undef if there
+		were no arguments
+
+0.10	Fri Jul 22 09:48:58 EDT 2011
+	Added protocol method
+	cgi_host_url now prepends https:// for secure connections
+	Fixed Test::Portability::Files' test - now ignores MS-DOS breakages
+		that aren't the fault of CGI::Info
+
+0.09	Sat Jul 16 10:36:27 EDT 2011
+	Added as_string() method
+	Removed space after the comma in comma seperated lists if an argument
+		is given more than once
+
+0.08	Thu Jul 14 12:30:11 EDT 2011
+	Check the value of GATEWAY_INTERFACE as well to see if we're running
+		under CGI
+	Corrected the HTML in the documentation
+	Added many tests
+	Fixed incompatibility with cgi_buffer, http://www.mnot.net/cgi_buffer/
+
+0.07	Thu Mar 24 10:40:17 EDT 2011
+	Ensure that Test:More >= 0.82 for new_ok
+	Added is_mobile()
+	Better example use of params
+
+0.06	Sat Jan  1 10:46:09 GMT 2011
+	Better error handling
+
+0.05	Sun Dec 26 11:16:08 GMT 2010
+	_domain_name wasn't being filled in
+
+0.04	Thu Dec 23 09:55:32 GMT 2010
+	More improved handling of script_path in test environments
+
+0.03	Wed Dec 22 21:48:43 GMT 2010
+	Better error handling in _domain_name
+	script_path works better in test environments
+
+0.02	Mon Dec 20 10:26:24 GMT 2010
+	script_name now does something useful when not running in a CGI
+		environment
+
+0.01    Sun Dec 12 22:24:09 EST 2010
+        First draft

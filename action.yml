@@ -1,6 +1,6 @@
 name: 'GHGen Workflow Analyzer'
 description: 'Analyze GitHub Actions workflows and suggest optimizations'
-author: 'Your Name'
+author: 'Nigel Horne'
 
 branding:
   icon: 'check-circle'
