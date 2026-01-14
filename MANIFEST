@@ -1,4 +1,5 @@
 .github/dependabot.yml
+.github/workflows/dashboard.yml
 .github/workflows/ghgen-check.yml
 .github/workflows/ghgen-comment.yml
 .github/workflows/perl-ci.yml

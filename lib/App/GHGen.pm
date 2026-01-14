@@ -450,7 +450,7 @@ Automatically comment on PRs that modify workflows:
         runs-on: ubuntu-latest
         steps:
           - uses: actions/checkout@v6
-          - uses: nigelhorne/App-GHGen-action@v1
+          - uses: nigelhorne/App-GHGen@v1
             with:
               github-token: ${{ secrets.GITHUB_TOKEN }}
               mode: comment
@@ -492,7 +492,7 @@ Automatically create PRs with fixes on a schedule:
         runs-on: ubuntu-latest
         steps:
           - uses: actions/checkout@v6
-          - uses: nigelhorne/App-GHGen-action@v1
+          - uses: nigelhorne/App-GHGen@v1
             with:
               github-token: ${{ secrets.GITHUB_TOKEN }}
               auto-fix: true
@@ -520,7 +520,7 @@ Fail builds if workflow issues are found:
         runs-on: ubuntu-latest
         steps:
           - uses: actions/checkout@v6
-          - uses: nigelhorne/App-GHGen-action@v1
+          - uses: nigelhorne/App-GHGen@v1
             id: check
           - name: Fail if issues found
             if: steps.check.outputs.issues-found > 0
