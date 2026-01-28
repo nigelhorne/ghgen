@@ -1,5 +1,10 @@
 package App::GHGen;
 
+# Try this to update GitHub Marketplace released, but bear in mind it tends to not work, marketplace does not detect the update
+# Update the @v1 to @v2 in actions.yml
+# git tag -a v2 -m "Release v0.02"
+# git push origin v2
+
 use v5.36;
 use strict;
 use warnings;
