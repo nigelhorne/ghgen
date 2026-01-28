@@ -4,6 +4,10 @@ package App::GHGen;
 # Update the @v1 to @v2 in actions.yml
 # git tag -a v2 -m "Release v0.02"
 # git push origin v2
+# Go to https://github.com/nigelhorne/App-GHGen/releases
+# Click “Draft a new release”
+# Choose the existing tag: v2
+# Publish the release
 
 use v5.36;
 use strict;
@@ -33,9 +37,14 @@ App::GHGen - Comprehensive GitHub Actions workflow generator, analyzer, and opti
 
 =head1 DESCRIPTION
 
-App::GHGen is a comprehensive toolkit for creating, analyzing, and optimizing GitHub Actions workflows.
-It combines intelligent project detection, workflow generation, security analysis, cost optimization,
-and automatic fixing into a single powerful tool.
+GHGen Workflow Analyzer is the all‑in‑one solution for keeping your GitHub Actions fast, secure, and effortlessly up‑to‑date.
+It automatically scans your workflows for performance bottlenecks,
+outdated actions,
+missing security permissions, and wasted CI minutes—then applies safe, intelligent fixes or opens a clean pull request with improvements.
+Whether you maintain a single project or dozens,
+GHGen saves time, reduces CI costs, and enforces modern best practices without manual effort.
+Developers choose it because it turns workflow maintenance from a chore into a fully automated,
+reliable part of their development pipeline.
 
 =head2 Key Features
 

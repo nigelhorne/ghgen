@@ -52,7 +52,6 @@ runs:
       uses: shogo82148/actions-setup-perl@v1
       with:
         perl-version: ${{ inputs.perl-version }}
-      shell: bash
     
     - name: Install App::GHGen
       shell: bash

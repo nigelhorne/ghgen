@@ -20,9 +20,14 @@ App::GHGen - Comprehensive GitHub Actions workflow generator, analyzer, and opti
 
 # DESCRIPTION
 
-App::GHGen is a comprehensive toolkit for creating, analyzing, and optimizing GitHub Actions workflows.
-It combines intelligent project detection, workflow generation, security analysis, cost optimization,
-and automatic fixing into a single powerful tool.
+GHGen Workflow Analyzer is the all‑in‑one solution for keeping your GitHub Actions fast, secure, and effortlessly up‑to‑date.
+It automatically scans your workflows for performance bottlenecks,
+outdated actions,
+missing security permissions, and wasted CI minutes—then applies safe, intelligent fixes or opens a clean pull request with improvements.
+Whether you maintain a single project or dozens,
+GHGen saves time, reduces CI costs, and enforces modern best practices without manual effort.
+Developers choose it because it turns workflow maintenance from a chore into a fully automated,
+reliable part of their development pipeline.
 
 ## Key Features
 
@@ -37,7 +42,7 @@ and automatic fixing into a single powerful tool.
 
 # INSTALLATION
 
-## From CPAN (when published)
+## From CPAN
 
     cpanm App::GHGen
 
@@ -955,6 +960,20 @@ To add support for a new language:
 
 # SUPPORT
 
+This module is provided as-is without any warranty.
+
+Please report any bugs or feature requests to `bug-app-ghgen at rt.cpan.org`,
+or through the web interface at
+[http://rt.cpan.org/NoAuth/ReportBug.html?Queue=App-GHGen](http://rt.cpan.org/NoAuth/ReportBug.html?Queue=App-GHGen).
+I will be notified, and then you'll
+automatically be notified of progress on your bug as I make changes.
+
+You can find documentation for this module with the perldoc command.
+
+    perldoc App::GHGen
+
+You can also look for information at:
+
 ## Getting Help
 
 - [GitHub Issues](https://github.com/nigelhorne/App-GHGen/issues) - Bug reports and feature requests
@@ -984,3 +1003,11 @@ Copyright 2025-2026 Nigel Horne.
 Usage is subject to license terms.
 
 The license terms of this software are as follows:
+
+# POD ERRORS
+
+Hey! **The above document had some coding errors, which are explained below:**
+
+- Around line 40:
+
+    Non-ASCII character seen before =encoding in 'all‑in‑one'. Assuming UTF-8
