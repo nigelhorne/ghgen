@@ -14,7 +14,7 @@ our @EXPORT_OK = qw(
 	get_cache_suggestion
 );
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head1 NAME
 
