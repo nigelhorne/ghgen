@@ -1,5 +1,9 @@
 Revision history for App-GHGen
 
+0.04
+	Bump maximum Perl version
+	Show debug on fail
+
 0.03	Wed Jan 28 20:07:05 EST 2026
 	Action.yml was broken, 'shell' isn't recognised
 

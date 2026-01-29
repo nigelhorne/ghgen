@@ -48,13 +48,13 @@ sub detect_perl_requirements() {
 	$reqs{has_dist_ini} = path('dist.ini')->exists;
 	$reqs{has_build_pl} = path('Build.PL')->exists;
 
-    # Try to detect minimum Perl version
-    if ($reqs{has_cpanfile}) {
-        my $content = path('cpanfile')->slurp_utf8;
-        if ($content =~ /requires\s+['"]perl['"],?\s+['"]([0-9.]+)['"]/) {
-            $reqs{min_version} = $1;
-        }
-    }
+	# Try to detect minimum Perl version
+	if ($reqs{has_cpanfile}) {
+		my $content = path('cpanfile')->slurp_utf8;
+		if ($content =~ /requires\s+['"]perl['"],?\s+['"]([0-9.]+)['"]/) {
+			$reqs{min_version} = $1;
+		}
+	}
 
     if (!$reqs{min_version} && $reqs{has_makefile_pl}) {
         my $content = path('Makefile.PL')->slurp_utf8;
@@ -218,12 +218,24 @@ sub generate_custom_perl_workflow($opts = {}) {
         $yaml .= "        shell: bash\n";
     }
 
+	$yaml .= <<'YAML';
+
+      - name: Show cpanm build log on failure (Windows)
+        if: runner.os == 'Windows' && failure()
+        shell: pwsh
+        run: Get-Content "$env:USERPROFILE\.cpanm\work\*\build.log" -Tail 100
+
+      - name: Show cpanm build log on failure (non-Windows)
+        if: runner.os != 'Windows' && failure()
+        run: tail -100 "$HOME/.cpanm/work/*/build.log"
+YAML
+
 	return $yaml;
 }
 
 sub _get_perl_versions($min, $max) {
 	# All available Perl versions in descending order
-	my @all_versions = qw(5.40 5.38 5.36 5.34 5.32 5.30 5.28 5.26 5.24 5.22);
+	my @all_versions = qw(5.42 5.40 5.38 5.36 5.34 5.32 5.30 5.28 5.26 5.24 5.22);
 
 	# Normalize version strings for comparison
 	my $min_normalized = _normalize_version($min);
@@ -237,7 +249,7 @@ sub _get_perl_versions($min, $max) {
 		}
 	}
 
-	return reverse @selected;  # Return in ascending order
+	return reverse @selected;	# Return in ascending order
 }
 
 sub _normalize_version($version) {
